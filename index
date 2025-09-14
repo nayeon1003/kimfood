@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>식자재 가격표</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .category-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .product-grid {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-item:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .product-specs {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            text-align: right;
+        }
+
+        .price-value {
+            display: block;
+        }
+
+        .price-unit {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 400;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .category-count {
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .product-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .product-price {
+                text-align: left;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 식자재 가격표</h1>
+            <p>신선하고 저렴한 식자재를 공급합니다</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 상품명을 검색하세요...">
+        </div>
+
+        <div class="category-tabs">
+            <button class="tab active" onclick="filterCategory('all')">전체 <span class="category-count" id="count-all">0</span></button>
+            <button class="tab" onclick="filterCategory('beverage')">음료수 <span class="category-count" id="count-beverage">0</span></button>
+            <button class="tab" onclick="filterCategory('disposable')">일회용품 <span class="category-count" id="count-disposable">0</span></button>
+            <button class="tab" onclick="filterCategory('seasoning')">조미료 <span class="category-count" id="count-seasoning">0</span></button>
+            <button class="tab" onclick="filterCategory('frozen')">냉동식품 <span class="category-count" id="count-frozen">0</span></button>
+            <button class="tab" onclick="filterCategory('sauce')">소스류 <span class="category-count" id="count-sauce">0</span></button>
+            <button class="tab" onclick="filterCategory('others')">기타 <span class="category-count" id="count-others">0</span></button>
+        </div>
+
+        <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <script>
+        const products = [
+            {name: "코카콜라", specs: "355ml", price: 21000, category: "beverage"},
+            {name: "칠성사이다", specs: "355ml", price: 18500, category: "beverage"},
+            {name: "웰치스포도", specs: "355ml", price: 18000, category: "beverage"},
+            {name: "종이컵", specs: "50매", price: 9800, category: "disposable"},
+            {name: "핸드타월", specs: "4200매", price: 24000, category: "disposable"},
+            {name: "화미실속다시다", specs: "20kg", price: 73000, category: "seasoning"},
+            {name: "큐원하얀설탕", specs: "15kg", price: 19800, category: "seasoning"},
+            {name: "화미이온물엿", specs: "8kg", price: 8000, category: "seasoning"},
+            {name: "백설맛소금", specs: "1kg", price: 3500, category: "seasoning"},
+            {name: "오뚜기 마요네즈 스파우트", specs: "3.2kg", price: 13000, category: "sauce"},
+            {name: "오뚜기 케챂 스파우트", specs: "3.2kg", price: 6300, category: "sauce"},
+            {name: "대림 유뷰 슬라이스", specs: "1kg", price: 11900, category: "others"},
+            {name: "하루 튀긴마늘슬라이스", specs: "500g", price: 8300, category: "others"},
+            {name: "오양 파지베이컨", specs: "1kg", price: 12900, category: "frozen"},
+            {name: "오뚜기 쉐프솔루션 베이컨", specs: "1kg", price: 13400, category: "frozen"},
+            {name: "하이썬부탄가스", specs: "1줄4입", price: 3800, category: "others"},
+            {name: "세진 고구마튀김", specs: "1kg", price: 7500, category: "frozen"},
+            {name: "오뚜기 약간매운맛카레", specs: "1kg", price: 6300, category: "sauce"},
+            {name: "오뚜기 짜장분말", specs: "1kg", price: 8800, category: "seasoning"},
+            {name: "혼한야채 4종", specs: "1kg", price: 3000, category: "frozen"},
+            {name: "지금 탕수육", specs: "1kg", price: 6500, category: "frozen"},
+            {name: "지금 냉동김말이튀김", specs: "40g", price: 4900, category: "frozen"},
+            {name: "오뚜기 팬더굴소스 스파우트팩", specs: "2kg", price: 10700, category: "sauce"},
+            {name: "대림 세절햄", specs: "1kg", price: 6200, category: "frozen"},
+            {name: "슈스트링감자", specs: "2kg", price: 8200, category: "frozen"},
+            {name: "클링클컷감자", specs: "2kg", price: 7200, category: "frozen"},
+            {name: "오뚜기 크림스프", specs: "1kg", price: 8200, category: "others"},
+            {name: "오뚜기 미향", specs: "18L", price: 28500, category: "seasoning"},
+            {name: "지금 미트볼", specs: "1kg", price: 4300, category: "frozen"},
+            {name: "간장깻잎", specs: "4kg", price: 14500, category: "others"},
+            {name: "양념깻잎", specs: "4kg", price: 14500, category: "others"},
+            {name: "무말랭이", specs: "4kg", price: 14000, category: "others"},
+            {name: "락스", specs: "12L", price: 4700, category: "others"},
+            {name: "오븐크리너 말", specs: "", price: 27500, category: "others"},
+            {name: "무쌈와사비맛", specs: "2.8kg", price: 4900, category: "others"},
+            {name: "미가 꼬마김말이", specs: "1kg", price: 5700, category: "frozen"},
+            {name: "하이퐁", specs: "11.8L", price: 14300, category: "others"},
+            {name: "삼진호일", specs: "25cm", price: 4000, category: "disposable"},
+            {name: "삼진호일", specs: "30cm", price: 4600, category: "disposable"},
+            {name: "스위트콘", specs: "2.950g", price: 4200, category: "others"},
+            {name: "행성 건빵가루", specs: "1kg", price: 3500, category: "others"},
+            {name: "곰표 마카로니", specs: "1kg", price: 1350, category: "others"},
+            {name: "동막골 밀건조떡", specs: "1.5kg", price: 3200, category: "others"},
+            {name: "달솔참순대", specs: "2kg", price: 7400, category: "frozen"},
+            {name: "서신 팩두부 6모", specs: "2kg", price: 5900, category: "others"},
+            {name: "등대특각", specs: "800g", price: 2900, category: "others"},
+            {name: "오양 요리왕김가루", specs: "1kg", price: 24500, category: "seasoning"},
+            {name: "산해들 포기김치(중)", specs: "10kg", price: 13500, category: "others"},
+            {name: "한라참치액기스", specs: "1.8L", price: 21500, category: "seasoning"},
+            {name: "곰표 튀김가루", specs: "1kg", price: 1950, category: "seasoning"},
+            {name: "이금기두분장", specs: "2.04kg", price: 14500, category: "sauce"},
+            {name: "신승 꼬마돈까스", specs: "1kg", price: 3700, category: "frozen"},
+            {name: "오토 순후추분말", specs: "1kg", price: 19000, category: "seasoning"},
+            {name: "신대도감자전분", specs: "20kg", price: 51500, category: "seasoning"},
+            {name: "풍전 감자전분", specs: "500g", price: 1700, category: "seasoning"},
+            {name: "사조 후랑크", specs: "1kg", price: 4600, category: "frozen"},
+            {name: "참깨", specs: "1kg", price: 7000, category: "seasoning"},
+            {name: "오양 교자만두", specs: "1.35kg", price: 5200, category: "frozen"}
+        ];
+
+        let currentCategory = 'all';
+        let currentSearch = '';
+
+        function formatPrice(price) {
+            return price.toLocaleString() + '원';
+        }
+
+        function updateCategoryCounts() {
+            const counts = {
+                all: products.length,
+                beverage: products.filter(p => p.category === 'beverage').length,
+                disposable: products.filter(p => p.category === 'disposable').length,
+                seasoning: products.filter(p => p.category === 'seasoning').length,
+                frozen: products.filter(p => p.category === 'frozen').length,
+                sauce: products.filter(p => p.category === 'sauce').length,
+                others: products.filter(p => p.category === 'others').length
+            };
+
+            Object.keys(counts).forEach(category => {
+                document.getElementById(`count-${category}`).textContent = counts[category];
+            });
+        }
+
+        function highlightText(text, search) {
+            if (!search) return text;
+            const regex = new RegExp(`(${search})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            let filteredProducts = products;
+
+            if (currentCategory !== 'all') {
+                filteredProducts = products.filter(p => p.category === currentCategory);
+            }
+
+            if (currentSearch) {
+                filteredProducts = filteredProducts.filter(p => 
+                    p.name.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                    p.specs.toLowerCase().includes(currentSearch.toLowerCase())
+                );
+            }
+
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = '<div class="no-results">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            grid.innerHTML = filteredProducts.map(product => `
+                <div class="product-item">
+                    <div class="product-info">
+                        <div class="product-name">${highlightText(product.name, currentSearch)}</div>
+                        <div class="product-specs">${highlightText(product.specs, currentSearch)}</div>
+                    </div>
+                    <div class="product-price">
+                        <span class="price-value">${formatPrice(product.price)}</span>
+                        <span class="price-unit">공급가</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            renderProducts();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            renderProducts();
+        });
+
+        // 초기 렌더링
+        updateCategoryCounts();
+        renderProducts();
+    </script>
+</body>
+</html>
